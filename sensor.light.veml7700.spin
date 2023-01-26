@@ -59,6 +59,8 @@ PUB stop{}
 
 PUB defaults{}
 ' Set factory defaults
+    als_gain(1_000)                             ' 1x gain
+    powered(false)
 
 PUB preset_active{}
 ' Like default settings, but enable sensor power
@@ -75,6 +77,21 @@ PUB als_data{}: als_adc
 ' Read Ambient Light Sensor data
 '   Returns:
     readreg(core#ALS, 2, @als_adc)
+
+PUB als_gain(gain): curr_gain
+' Set sensor gain factor
+'   Valid values: 1_000 (1x), 2_000 (2x), 125 (1/8), 250 (1/4)
+'   Any other value polls the chip and returns the current setting
+    curr_gain := 0
+    readreg(core#ALS_CONF_0, 2, @curr_gain)
+    case gain
+        1_000, 2_000, 125, 250:
+            gain := lookdownz(gain: 1_000, 2_000, 125, 250) << core#ALS_GAIN
+            gain := ((curr_gain & core#ALS_GAIN_MASK) | gain)
+            writereg(core#ALS_CONF_0, 2, @gain)
+        other:
+            curr_gain := ((curr_gain >> core#ALS_GAIN) & core#ALS_GAIN_BITS)
+            return lookupz(curr_gain: 1_000, 2_000, 125, 250)
 
 PUB powered(state): curr_state
 ' Enable sensor power
