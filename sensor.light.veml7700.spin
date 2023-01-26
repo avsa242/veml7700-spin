@@ -148,6 +148,28 @@ PUB int_ena(state): curr_state
         other:
             return (((curr_state >> core#ALS_INT_EN) & 1) == 1)
 
+PUB int_hi_thresh{}: thresh
+' Get currently set high interrupt threshold
+    thresh := 0
+    readreg(core#ALS_WH, 2, @thresh)
+
+PUB int_lo_thresh{}: thresh
+' Get currently set low interrupt threshold
+    thresh := 0
+    readreg(core#ALS_WL, 2, @thresh)
+
+PUB int_set_hi_thresh(thresh)
+' Set interrupt high threshold
+'   Valid values: 0..65535 (clamped to range)
+    thresh := 0 #> thresh <# 65535
+    writereg(core#ALS_WH, 2, @thresh)
+
+PUB int_set_lo_thresh(thresh)
+' Set interrupt low threshold
+'   Valid values: 0..65535 (clamped to range)
+    thresh := 0 #> thresh <# 65535
+    writereg(core#ALS_WL, 2, @thresh)
+
 PUB powered(state): curr_state
 ' Enable sensor power
 '   Valid values: TRUE (-1 or 1), FALSE (0)
