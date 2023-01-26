@@ -8,6 +8,11 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for the VEML770
 ## Salient Features
 
 * I2C connection at ~28kHz (P1: bytecode I2C) or up to 400kHz (P1: native code I2C)
+* Measure illuminance in lux (0.00001 units), get max possible reading with current settings
+* Read ADC word for ALS and white channels
+* Set sensor gain and integration time
+* Interrupts: set thresholds, read flags, set duration in cycles
+* Power: power sensor on/off, enable power saving modes
 
 ## Requirements
 
