@@ -60,10 +60,12 @@ PUB stop{}
 PUB defaults{}
 ' Set factory defaults
     als_gain(1_000)                             ' 1x gain
+    als_integr_time(25)                         ' 25ms integration time
     powered(false)
 
 PUB preset_active{}
 ' Like default settings, but enable sensor power
+    defaults{}
     powered(true)
 
 PUB present{}: ack | tmp
@@ -92,6 +94,31 @@ PUB als_gain(gain): curr_gain
         other:
             curr_gain := ((curr_gain >> core#ALS_GAIN) & core#ALS_GAIN_BITS)
             return lookupz(curr_gain: 1_000, 2_000, 125, 250)
+
+PUB als_integr_time(itime): curr_itime
+' Set sensor integration time, in milliseconds
+'   Valid values: 25, 50, 100, 200, 400, 800
+'   Any other value polls the chip and returns the current setting
+    curr_itime := 0
+    readreg(core#ALS_CONF_0, 2, @curr_itime)
+    case itime
+        100, 200, 400, 800:
+            itime := lookdownz(itime: 100, 200, 400, 800) << core#ALS_IT
+        25:
+            itime := %1100 << core#ALS_IT
+        50:
+            itime := %1000 << core#ALS_IT
+        other:
+            curr_itime := (curr_itime >> core#ALS_IT) & core#ALS_IT_BITS
+            if (curr_itime < %1000)
+                return lookupz(curr_itime: 100, 200, 400, 800)
+            elseif (curr_itime == %1000)
+                return 50
+            elseif (curr_itime == %1100)
+                return 25
+
+    itime := ((curr_itime & core#ALS_IT_MASK) | itime)
+    writereg(core#ALS_CONF_0, 2, @itime)
 
 PUB powered(state): curr_state
 ' Enable sensor power
