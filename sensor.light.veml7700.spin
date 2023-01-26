@@ -195,6 +195,24 @@ PUB power_save_mode(mode): curr_mode
 ' Set power saving mode
 '   Valid values: 1..4
 '   Any other value polls the chip and returns the current setting
+'   mode        als_integr_time()       refresh time (ms)   current (uA)    resolution (lx/bit)
+'   ----        -----------------       -----------------   ------------    -------------------
+'   1           100                     600                 8               0.0288
+'   2           100                     1100                5               0.0288
+'   3           100                     2100                3               0.0288
+'   4           100                     4100                2               0.0288
+'   1           200                     700                 13              0.0144
+'   2           200                     1200                8               0.0144
+'   3           200                     2200                5               0.0144
+'   4           200                     4200                3               0.0144
+'   1           400                     900                 20              0.0072
+'   2           400                     1400                13              0.0072
+'   3           400                     2400                8               0.0072
+'   4           400                     4400                5               0.0072
+'   1           800                     1300                28              0.0036
+'   2           800                     1800                20              0.0036
+'   3           800                     2800                13              0.0036
+'   4           800                     4800                8               0.0036
     curr_mode := 0
     readreg(core#PWR_SAVING, 2, @curr_mode)
     case mode
