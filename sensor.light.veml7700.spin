@@ -178,6 +178,19 @@ PUB interrupt{}: int_src
     int_src := 0
     readreg(core#ALS_INT, 2, @int_src)
 
+PUB power_save_ena(state): curr_state
+' Enable power saving mode
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value polls the chip and returns the current setting
+    curr_state := 0
+    readreg(core#PWR_SAVING, 2, @curr_state)
+    case ||(state)
+        0, 1:
+            state := ((curr_state & core#PSM_EN_MASK) | state)
+            writereg(core#PSM_EN_MASK, 2, @state)
+        other:
+            return ((curr_state & 1) == 1)
+
 PUB powered(state): curr_state
 ' Enable sensor power
 '   Valid values: TRUE (-1 or 1), FALSE (0)
