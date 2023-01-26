@@ -135,6 +135,19 @@ PUB int_duration(dur): curr_dur
             curr_dur := ((curr_dir >> core#ALS_PERS) & core#ALS_PERS_BITS)
             return lookupz(curr_dur: 1, 2, 4, 8)
 
+PUB int_ena(state): curr_state
+' Enable interrupts
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value polls the chip and returns the current setting
+    curr_state := 0
+    readreg(core#ALS_CONF_0, 2, @curr_state)
+    case ||(state)
+        0, 1:
+            state := ( (curr_state & core#ALS_SD_MASK) | ((state & 1) << core#ALS_INT_EN) )
+            writereg(core#ALS_CONF_0, 2, @state)
+        other:
+            return (((curr_state >> core#ALS_INT_EN) & 1) == 1)
+
 PUB powered(state): curr_state
 ' Enable sensor power
 '   Valid values: TRUE (-1 or 1), FALSE (0)
