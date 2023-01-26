@@ -37,7 +37,8 @@ PUB main{}
 
     repeat
         ser.pos_xy(0, 3)
-        ser.hexs(sensor.als_data{}, 4)
+        ser.printf1(@"ALS: %4.4x\n\r", sensor.als_data{})
+        ser.printf1(@"White: %4.4x", sensor.white_data{})
 
 PUB setup
 

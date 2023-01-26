@@ -17,6 +17,7 @@ CON
     SLAVE_ADDR          = $10 << 1                  ' 7-bit format slave address
     T_POR               = 1_000                         ' startup time (usecs)
 
+    ADC_MAX             = 65535
 
 ' Register definitions
     ALS_CONF_0          = $00

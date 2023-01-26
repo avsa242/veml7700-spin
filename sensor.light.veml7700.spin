@@ -12,16 +12,20 @@
 
 CON
 
-    SLAVE_WR          = core#SLAVE_ADDR
-    SLAVE_RD          = core#SLAVE_ADDR|1
+    SLAVE_WR        = core#SLAVE_ADDR
+    SLAVE_RD        = core#SLAVE_ADDR|1
 
-    DEF_SCL           = 28
-    DEF_SDA           = 29
-    DEF_HZ            = 100_000
-    I2C_MAX_FREQ      = core#I2C_MAX_FREQ
+    DEF_SCL         = 28
+    DEF_SDA         = 29
+    DEF_HZ          = 100_000
+    I2C_MAX_FREQ    = core#I2C_MAX_FREQ
+
+    ADC_MAX         = core#ADC_MAX
 
 VAR
 
+    long _lux_res, _lux_max
+    long _als_gain, _als_itime
 
 OBJ
 
@@ -88,12 +92,15 @@ PUB als_gain(gain): curr_gain
     readreg(core#ALS_CONF_0, 2, @curr_gain)
     case gain
         1_000, 2_000, 125, 250:
+            _als_gain := gain
             gain := lookdownz(gain: 1_000, 2_000, 125, 250) << core#ALS_GAIN
             gain := ((curr_gain & core#ALS_GAIN_MASK) | gain)
             writereg(core#ALS_CONF_0, 2, @gain)
         other:
             curr_gain := ((curr_gain >> core#ALS_GAIN) & core#ALS_GAIN_BITS)
             return lookupz(curr_gain: 1_000, 2_000, 125, 250)
+
+    update_lux_res{}
 
 PUB als_integr_time(itime): curr_itime
 ' Set sensor integration time, in milliseconds
@@ -103,10 +110,13 @@ PUB als_integr_time(itime): curr_itime
     readreg(core#ALS_CONF_0, 2, @curr_itime)
     case itime
         100, 200, 400, 800:
+            _als_itime := itime
             itime := lookdownz(itime: 100, 200, 400, 800) << core#ALS_IT
         25:
+            _als_itime := itime
             itime := %1100 << core#ALS_IT
         50:
+            _als_itime := itime
             itime := %1000 << core#ALS_IT
         other:
             curr_itime := (curr_itime >> core#ALS_IT) & core#ALS_IT_BITS
@@ -119,6 +129,7 @@ PUB als_integr_time(itime): curr_itime
 
     itime := ((curr_itime & core#ALS_IT_MASK) | itime)
     writereg(core#ALS_CONF_0, 2, @itime)
+    update_lux_res{}
 
 PUB int_duration(dur): curr_dur
 ' Set number of consecutive measurements outside set threshold necessary to generate an interrupt
@@ -178,6 +189,14 @@ PUB interrupt{}: int_src
     int_src := 0
     readreg(core#ALS_INT, 2, @int_src)
 
+PUB lux{}: l
+' Return lux from live measurement
+    return als_data{} * _lux_res
+
+PUB lux_maximum{}: lm
+' Get the maximum possible lux reading, given the current gain and integration time settings
+    return _lux_max
+
 PUB power_save_ena(state): curr_state
 ' Enable power saving mode
 '   Valid values: TRUE (-1 or 1), FALSE (0)
@@ -218,7 +237,7 @@ PUB power_save_mode(mode): curr_mode
     case mode
         1..4:
             mode := ((curr_mode & core#PSM_MASK) | (mode-1))
-            writereg(core#PWR_SAVING 2, @mode)
+            writereg(core#PWR_SAVING, 2, @mode)
         other:
             return ((curr_mode >> core#PSM) & core#PSM_BITS)
 
@@ -236,6 +255,44 @@ PUB powered(state): curr_state
             writereg(core#ALS_CONF_0, 2, @state)
         other:
             return ((curr_state & 1) == 1)
+
+PUB update_lux_res{}
+' Update lux resolution (lux per ADC LSB)
+    case _als_gain
+        2_000:
+            case _als_itime
+                800: _lux_res := 0_0036
+                400: _lux_res := 0_0072
+                200: _lux_res := 0_0144
+                100: _lux_res := 0_0288
+                50: _lux_res := 0_0576
+                25: _lux_res := 0_1152
+        1_000:
+            case _als_itime
+                800: _lux_res := 0_0072
+                400: _lux_res := 0_0144
+                200: _lux_res := 0_0288
+                100: _lux_res := 0_0576
+                50: _lux_res := 0_1152
+                25: _lux_res := 0_2304
+        0_250:
+            case _als_itime
+                800: _lux_res := 0_0288
+                400: _lux_res := 0_0576
+                200: _lux_res := 0_1152
+                100: _lux_res := 0_2304
+                50: _lux_res := 0_4608
+                25: _lux_res := 0_9216
+        0_125:
+            case _als_itime
+                800: _lux_res := 0_0576
+                400: _lux_res := 0_1152
+                200: _lux_res := 0_2304
+                100: _lux_res := 0_4608
+                50: _lux_res := 0_9216
+                25: _lux_res := 1_8432
+
+    _lux_max := (_lux_res * ADC_MAX)
 
 PUB white_data{}: white_adc
 ' Read ambient light sensor data - wide spectral response
