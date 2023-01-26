@@ -191,6 +191,19 @@ PUB power_save_ena(state): curr_state
         other:
             return ((curr_state & 1) == 1)
 
+PUB power_save_mode(mode): curr_mode
+' Set power saving mode
+'   Valid values: 1..4
+'   Any other value polls the chip and returns the current setting
+    curr_mode := 0
+    readreg(core#PWR_SAVING, 2, @curr_mode)
+    case mode
+        1..4:
+            mode := ((curr_mode & core#PSM_MASK) | (mode-1))
+            writereg(core#PWR_SAVING 2, @mode)
+        other:
+            return ((curr_mode >> core#PSM) & core#PSM_BITS)
+
 PUB powered(state): curr_state
 ' Enable sensor power
 '   Valid values: TRUE (-1 or 1), FALSE (0)
