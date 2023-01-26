@@ -120,6 +120,21 @@ PUB als_integr_time(itime): curr_itime
     itime := ((curr_itime & core#ALS_IT_MASK) | itime)
     writereg(core#ALS_CONF_0, 2, @itime)
 
+PUB int_duration(dur): curr_dur
+' Set number of consecutive measurements outside set threshold necessary to generate an interrupt
+'   Valid values: 1, 2, 4, 8
+'   Any other value polls the chip and returns the current setting
+    curr_dur := 0
+    readreg(core#ALS_CONF_0, 2, @curr_dur)
+    case dur
+        1, 2, 4, 8:
+            dur := lookdownz(dur: 1, 2, 4, 8) << core#ALS_PERS
+            dur := ((curr_dir & core#ALS_PERS_MASK) | dur)
+            writereg(core#ALS_CONF_0, 2, @dur)
+        other:
+            curr_dur := ((curr_dir >> core#ALS_PERS) & core#ALS_PERS_BITS)
+            return lookupz(curr_dur: 1, 2, 4, 8)
+
 PUB powered(state): curr_state
 ' Enable sensor power
 '   Valid values: TRUE (-1 or 1), FALSE (0)
