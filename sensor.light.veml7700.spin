@@ -170,6 +170,14 @@ PUB int_set_lo_thresh(thresh)
     thresh := 0 #> thresh <# 65535
     writereg(core#ALS_WL, 2, @thresh)
 
+PUB interrupt{}: int_src
+' Read interrupt flags
+'   Bits
+'       15: low threshold exceeded
+'       14: high threshold exceeded
+    int_src := 0
+    readreg(core#ALS_INT, 2, @int_src)
+
 PUB powered(state): curr_state
 ' Enable sensor power
 '   Valid values: TRUE (-1 or 1), FALSE (0)
@@ -186,9 +194,10 @@ PUB powered(state): curr_state
             return ((curr_state & 1) == 1)
 
 PUB white_data{}: white_adc
-' Read Ambient Light Sensor data
+' Read ambient light sensor data - wide spectral response
 '   Returns:
-    readreg(core#WHITE, 2, @als_adc)
+    white_adc := 0
+    readreg(core#WHITE, 2, @white_adc)
 
 PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 ' Read nr_bytes from the device into ptr_buff
