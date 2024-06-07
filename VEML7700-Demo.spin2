@@ -15,21 +15,12 @@ CON
     _clkfreq    = cfg._clkfreq_def
     _xtlfreq    = cfg._xtlfreq
 
-' -- User-defined constants
-    SER_BAUD    = 2_000_000
-
-    SCL_PIN     = 0
-    SDA_PIN     = 1
-    I2C_FREQ    = 400_000
-
-' --
-
 
 OBJ
 
     cfg:    "boardcfg.p2eval"
-    ser:    "com.serial.terminal.ansi"
-    sensor: "sensor.light.veml7700"
+    ser:    "com.serial.terminal.ansi" | SER_BAUD=2_000_000
+    sensor: "sensor.light.veml7700" | SCL=0, SDA=1, I2C_FREQ=400_000
 
 
 PUB main()
@@ -44,12 +35,11 @@ PUB main()
 
 PUB setup()
 
-    ser.start(SER_BAUD)
-    waitms(30)
+    ser.start()
     ser.clear()
     ser.strln(@"Serial terminal started")
 
-    if (sensor.startx(SCL_PIN, SDA_PIN, I2C_FREQ))
+    if ( sensor.start() )
         ser.strln(@"VEML7700 driver started")
     else
         ser.strln(@"VEML7700 driver failed to start - halting")

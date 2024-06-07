@@ -10,8 +10,8 @@
 }
 
 ' Uncomment the next two lines to use the bytecode-based I2C engine in the driver.
-'#define VEML7700_I2C_BC
-'#pragma exportdef(VEML7700_I2C_BC)
+#define VEML7700_I2C_BC
+#pragma exportdef(VEML7700_I2C_BC)
 
 
 CON
@@ -19,22 +19,13 @@ CON
     _clkmode    = cfg._clkmode
     _xinfreq    = cfg._xinfreq
 
-' -- User-defined constants
-    SER_BAUD    = 115_200
-
-    SCL_PIN     = 28
-    SDA_PIN     = 29
-    I2C_FREQ    = 400_000
-
-' --
-
 
 OBJ
 
     cfg:    "boardcfg.flip"
-    ser:    "com.serial.terminal.ansi"
     time:   "time"
-    sensor: "sensor.light.veml7700"
+    ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
+    sensor: "sensor.light.veml7700" | SCL=28, SDA=29, I2C_FREQ=400_000
 
 
 PUB main()
@@ -49,12 +40,12 @@ PUB main()
 
 PUB setup()
 
-    ser.start(SER_BAUD)
+    ser.start()
     time.msleep(30)
     ser.clear
     ser.strln(@"Serial terminal started")
 
-    if (sensor.startx(SCL_PIN, SDA_PIN, I2C_FREQ))
+    if ( sensor.start() )
         ser.strln(@"VEML7700 driver started")
     else
         ser.strln(@"VEML7700 driver failed to start - halting")
