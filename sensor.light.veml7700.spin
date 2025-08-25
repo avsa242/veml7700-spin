@@ -4,8 +4,8 @@
     Description:    Driver for the VEML7700 ALS/Lux sensor
     Author:         Jesse Burt
     Started:        Jan 25, 2023
-    Updated:        Jun 7, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Aug 25, 2025
+    Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -98,21 +98,20 @@ PUB present(): ack | tmp
 PUB als_data(): als_adc
 ' Read Ambient Light Sensor data
 '   Returns:
-    readreg(core.ALS, 2, @als_adc)
+    return readreg(core.ALS)
 
 
 PUB als_gain(gain): curr_gain
 ' Set sensor gain factor
 '   Valid values: 1_000 (1x), 2_000 (2x), 125 (1/8), 250 (1/4)
 '   Any other value polls the chip and returns the current setting
-    curr_gain := 0
-    readreg(core.ALS_CONF_0, 2, @curr_gain)
+    curr_gain := readreg(core.ALS_CONF_0)
     case gain
         1_000, 2_000, 125, 250:
             _als_gain := gain
             gain := lookdownz(gain: 1_000, 2_000, 125, 250) << core.ALS_GAIN
             gain := ((curr_gain & core.ALS_GAIN_MASK) | gain)
-            writereg(core.ALS_CONF_0, 2, @gain)
+            writereg(core.ALS_CONF_0, gain)
         other:
             curr_gain := ((curr_gain >> core.ALS_GAIN) & core.ALS_GAIN_BITS)
             return lookupz(curr_gain: 1_000, 2_000, 125, 250)
@@ -124,8 +123,7 @@ PUB als_integr_time(itime): curr_itime
 ' Set sensor integration time, in milliseconds
 '   Valid values: 25, 50, 100, 200, 400, 800
 '   Any other value polls the chip and returns the current setting
-    curr_itime := 0
-    readreg(core.ALS_CONF_0, 2, @curr_itime)
+    curr_itime := readreg(core.ALS_CONF_0)
     case itime
         100, 200, 400, 800:
             _als_itime := itime
@@ -146,7 +144,7 @@ PUB als_integr_time(itime): curr_itime
                 return 25
 
     itime := ((curr_itime & core.ALS_IT_MASK) | itime)
-    writereg(core.ALS_CONF_0, 2, @itime)
+    writereg(core.ALS_CONF_0, itime)
     update_lux_res()
 
 
@@ -154,13 +152,12 @@ PUB int_duration(dur): curr_dur
 ' Set number of consecutive measurements outside set threshold necessary to generate an interrupt
 '   Valid values: 1, 2, 4, 8
 '   Any other value polls the chip and returns the current setting
-    curr_dur := 0
-    readreg(core.ALS_CONF_0, 2, @curr_dur)
+    curr_dur := readreg(core.ALS_CONF_0)
     case dur
         1, 2, 4, 8:
             dur := lookdownz(dur: 1, 2, 4, 8) << core.ALS_PERS
             dur := ((curr_dir & core.ALS_PERS_MASK) | dur)
-            writereg(core.ALS_CONF_0, 2, @dur)
+            writereg(core.ALS_CONF_0, dur)
         other:
             curr_dur := ((curr_dir >> core.ALS_PERS) & core.ALS_PERS_BITS)
             return lookupz(curr_dur: 1, 2, 4, 8)
@@ -170,40 +167,37 @@ PUB int_ena(state): curr_state
 ' Enable interrupts
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
-    curr_state := 0
-    readreg(core.ALS_CONF_0, 2, @curr_state)
+    curr_state := readreg(core.ALS_CONF_0)
     case ||(state)
         0, 1:
             state := ( (curr_state & core.ALS_SD_MASK) | ((state & 1) << core.ALS_INT_EN) )
-            writereg(core.ALS_CONF_0, 2, @state)
+            writereg(core.ALS_CONF_0, state)
         other:
             return (((curr_state >> core.ALS_INT_EN) & 1) == 1)
 
 
 PUB int_hi_thresh(): thresh
 ' Get currently set high interrupt threshold
-    thresh := 0
-    readreg(core.ALS_WH, 2, @thresh)
+    return readreg(core.ALS_WH)
 
 
 PUB int_lo_thresh(): thresh
 ' Get currently set low interrupt threshold
-    thresh := 0
-    readreg(core.ALS_WL, 2, @thresh)
+    return readreg(core.ALS_WL)
 
 
 PUB int_set_hi_thresh(thresh)
 ' Set interrupt high threshold
 '   Valid values: 0..65535 (clamped to range)
     thresh := 0 #> thresh <# 65535
-    writereg(core.ALS_WH, 2, @thresh)
+    writereg(core.ALS_WH, thresh)
 
 
 PUB int_set_lo_thresh(thresh)
 ' Set interrupt low threshold
 '   Valid values: 0..65535 (clamped to range)
     thresh := 0 #> thresh <# 65535
-    writereg(core.ALS_WL, 2, @thresh)
+    writereg(core.ALS_WL, thresh)
 
 
 PUB interrupt(): int_src
@@ -211,8 +205,7 @@ PUB interrupt(): int_src
 '   Bits
 '       15: low threshold exceeded
 '       14: high threshold exceeded
-    int_src := 0
-    readreg(core.ALS_INT, 2, @int_src)
+    return readreg(core.ALS_INT)
 
 
 PUB lux(): l
@@ -229,12 +222,11 @@ PUB power_save_ena(state): curr_state
 ' Enable power saving mode
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
-    curr_state := 0
-    readreg(core.PWR_SAVING, 2, @curr_state)
+    curr_state := readreg(core.PWR_SAVING)
     case ||(state)
         0, 1:
             state := ((curr_state & core.PSM_EN_MASK) | state)
-            writereg(core.PSM_EN_MASK, 2, @state)
+            writereg(core.PSM_EN_MASK, state)
         other:
             return ((curr_state & 1) == 1)
 
@@ -261,12 +253,11 @@ PUB power_save_mode(mode): curr_mode
 '   2           800                     1800                20              0.0036
 '   3           800                     2800                13              0.0036
 '   4           800                     4800                8               0.0036
-    curr_mode := 0
-    readreg(core.PWR_SAVING, 2, @curr_mode)
+    curr_mode := readreg(core.PWR_SAVING)
     case mode
         1..4:
             mode := ((curr_mode & core.PSM_MASK) | (mode-1))
-            writereg(core.PWR_SAVING, 2, @mode)
+            writereg(core.PWR_SAVING, mode)
         other:
             return ((curr_mode >> core.PSM) & core.PSM_BITS)
 
@@ -275,14 +266,13 @@ PUB powered(state): curr_state
 ' Enable sensor power
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
-    curr_state := 0
-    readreg(core.ALS_CONF_0, 2, @curr_state)
+    curr_state := readreg(core.ALS_CONF_0)
     case ||(state)
         0, 1:
             { ALS_SD is worded as a 'shut down' field, so 0 = power on, 1 = power off;
                 flip the bit here before writing it back to the sensor }
             state := ((curr_state & core.ALS_SD_MASK) | ( (state ^ 1) & 1))
-            writereg(core.ALS_CONF_0, 2, @state)
+            writereg(core.ALS_CONF_0, state)
         other:
             return ((curr_state & 1) == 1)
 
@@ -329,12 +319,12 @@ PUB update_lux_res()
 PUB white_data(): white_adc
 ' Read ambient light sensor data - wide spectral response
 '   Returns: ADC counts
-    white_adc := 0
-    readreg(core.WHITE, 2, @white_adc)
+    return readreg(core.WHITE)
 
 
-PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
+PRI readreg(reg_nr): v | cmd_pkt
 ' Read nr_bytes from the device into ptr_buff
+    v := 0
     case reg_nr                                 ' validate register num
         $00..$06:
             cmd_pkt.byte[0] := SLAVE_WR
@@ -343,13 +333,13 @@ PRI readreg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
             i2c.wrblock_lsbf(@cmd_pkt, 2)
             i2c.start()
             i2c.wr_byte(SLAVE_RD)
-            i2c.rdblock_lsbf(ptr_buff, nr_bytes, i2c.NAK)
+            i2c.rdblock_lsbf(@v, 2, i2c.NAK)
             i2c.stop()
         other:                                  ' invalid reg_nr
             return
 
 
-PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
+PRI writereg(reg_nr, val) | cmd_pkt
 ' Write nr_bytes to the device from ptr_buff
     case reg_nr
         $00..$02:
@@ -357,7 +347,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
             cmd_pkt.byte[1] := reg_nr
             i2c.start()
             i2c.wrblock_lsbf(@cmd_pkt, 2)
-            i2c.wrblock_lsbf(ptr_buff, nr_bytes)
+            i2c.wrblock_lsbf(@val, 2)
             i2c.stop()
         other:
             return
@@ -365,7 +355,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | cmd_pkt
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2025 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
