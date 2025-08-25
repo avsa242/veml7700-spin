@@ -89,112 +89,112 @@ PUB present(): ack | tmp
     return (tmp == i2c.ACK)
 
 
-PUB als_data(): als_adc
+PUB als_data(): d
 ' Read Ambient Light Sensor data
 '   Returns:
     return readreg(core.ALS)
 
 
-PUB als_gain(gain): curr_gain
+PUB als_gain(g): c
 ' Set sensor gain factor
 '   Valid values: 1_000 (1x), 2_000 (2x), 125 (1/8), 250 (1/4)
 '   Any other value polls the chip and returns the current setting
-    curr_gain := readreg(core.ALS_CONF_0)
-    case gain
+    c := readreg(core.ALS_CONF_0)
+    case g
         1_000, 2_000, 125, 250:
-            _als_gain := gain
-            gain := lookdownz(gain: 1_000, 2_000, 125, 250) << core.ALS_GAIN
-            gain := ((curr_gain & core.ALS_GAIN_MASK) | gain)
-            writereg(core.ALS_CONF_0, gain)
+            _als_gain := g
+            g := lookdownz(g: 1_000, 2_000, 125, 250) << core.ALS_GAIN
+            g := ((c & core.ALS_GAIN_MASK) | g)
+            writereg(core.ALS_CONF_0, g)
         other:
-            curr_gain := ((curr_gain >> core.ALS_GAIN) & core.ALS_GAIN_BITS)
-            return lookupz(curr_gain: 1_000, 2_000, 125, 250)
+            c := ((c >> core.ALS_GAIN) & core.ALS_GAIN_BITS)
+            return lookupz(c: 1_000, 2_000, 125, 250)
 
     update_lux_res()
 
 
-PUB als_integr_time(itime): curr_itime
+PUB als_integr_time(t): c
 ' Set sensor integration time, in milliseconds
 '   Valid values: 25, 50, 100, 200, 400, 800
 '   Any other value polls the chip and returns the current setting
-    curr_itime := readreg(core.ALS_CONF_0)
-    case itime
+    c := readreg(core.ALS_CONF_0)
+    case t
         100, 200, 400, 800:
-            _als_itime := itime
-            itime := lookdownz(itime: 100, 200, 400, 800) << core.ALS_IT
+            _als_itime := t
+            t := lookdownz(t: 100, 200, 400, 800) << core.ALS_IT
         25:
-            _als_itime := itime
-            itime := %1100 << core.ALS_IT
+            _als_itime := t
+            t := %1100 << core.ALS_IT
         50:
-            _als_itime := itime
-            itime := %1000 << core.ALS_IT
+            _als_itime := t
+            t := %1000 << core.ALS_IT
         other:
-            curr_itime := (curr_itime >> core.ALS_IT) & core.ALS_IT_BITS
-            if (curr_itime < %1000)
-                return lookupz(curr_itime: 100, 200, 400, 800)
-            elseif (curr_itime == %1000)
+            c := (c >> core.ALS_IT) & core.ALS_IT_BITS
+            if (c < %1000)
+                return lookupz(c: 100, 200, 400, 800)
+            elseif (c == %1000)
                 return 50
-            elseif (curr_itime == %1100)
+            elseif (c == %1100)
                 return 25
 
-    itime := ((curr_itime & core.ALS_IT_MASK) | itime)
-    writereg(core.ALS_CONF_0, itime)
+    t := ((c & core.ALS_IT_MASK) | t)
+    writereg(core.ALS_CONF_0, t)
     update_lux_res()
 
 
-PUB int_duration(dur): curr_dur
+PUB int_duration(d): c
 ' Set number of consecutive measurements outside set threshold necessary to generate an interrupt
 '   Valid values: 1, 2, 4, 8
 '   Any other value polls the chip and returns the current setting
-    curr_dur := readreg(core.ALS_CONF_0)
-    case dur
+    c := readreg(core.ALS_CONF_0)
+    case d
         1, 2, 4, 8:
-            dur := lookdownz(dur: 1, 2, 4, 8) << core.ALS_PERS
-            dur := ((curr_dir & core.ALS_PERS_MASK) | dur)
-            writereg(core.ALS_CONF_0, dur)
+            d := lookdownz(d: 1, 2, 4, 8) << core.ALS_PERS
+            d := ((c & core.ALS_PERS_MASK) | d)
+            writereg(core.ALS_CONF_0, d)
         other:
-            curr_dur := ((curr_dir >> core.ALS_PERS) & core.ALS_PERS_BITS)
-            return lookupz(curr_dur: 1, 2, 4, 8)
+            c := ((c >> core.ALS_PERS) & core.ALS_PERS_BITS)
+            return lookupz(c: 1, 2, 4, 8)
 
 
-PUB int_ena(state): curr_state
+PUB int_ena(s): c
 ' Enable interrupts
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
-    curr_state := readreg(core.ALS_CONF_0)
-    case abs(state)
+    c := readreg(core.ALS_CONF_0)
+    case abs(s)
         0, 1:
-            state := ( (curr_state & core.ALS_SD_MASK) | ((state & 1) << core.ALS_INT_EN) )
-            writereg(core.ALS_CONF_0, state)
+            st:= ( (c & core.ALS_SD_MASK) | ((st& 1) << core.ALS_INT_EN) )
+            writereg(core.ALS_CONF_0, s)
         other:
-            return (((curr_state >> core.ALS_INT_EN) & 1) == 1)
+            return ( ( (c >> core.ALS_INT_EN) & 1) == 1)
 
 
-PUB int_hi_thresh(): thresh
+PUB int_hi_thresh(): t
 ' Get currently set high interrupt threshold
     return readreg(core.ALS_WH)
 
 
-PUB int_lo_thresh(): thresh
+PUB int_lo_thresh(): t
 ' Get currently set low interrupt threshold
     return readreg(core.ALS_WL)
 
 
-PUB int_set_hi_thresh(thresh)
+PUB int_set_hi_thresh(t)
 ' Set interrupt high threshold
 '   Valid values: 0..65535 (clamped to range)
-    thresh := 0 #> thresh <# 65535
-    writereg(core.ALS_WH, thresh)
+    t := 0 #> t <# 65535
+    writereg(core.ALS_WH, t)
 
 
-PUB int_set_lo_thresh(thresh)
+PUB int_set_lo_thresh(t)
 ' Set interrupt low threshold
 '   Valid values: 0..65535 (clamped to range)
-    thresh := 0 #> thresh <# 65535
-    writereg(core.ALS_WL, thresh)
+    t := 0 #> t <# 65535
+    writereg(core.ALS_WL, t)
 
 
-PUB interrupt(): int_src
+PUB interrupt(): s
 ' Read interrupt flags
 '   Bits
 '       15: low threshold exceeded
@@ -207,25 +207,25 @@ PUB lux(): l
     return ( als_data() * _lux_res )
 
 
-PUB lux_maximum(): lm
+PUB lux_maximum(): l
 ' Get the maximum possible lux reading, given the current gain and integration time settings
     return _lux_max
 
 
-PUB power_save_ena(state): curr_state
+PUB power_save_ena(s): c
 ' Enable power saving mode
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
-    curr_state := readreg(core.PWR_SAVING)
-    case abs(state)
+    c := readreg(core.PWR_SAVING)
+    case abs(s)
         0, 1:
-            state := ((curr_state & core.PSM_EN_MASK) | state)
-            writereg(core.PSM_EN_MASK, state)
+            s := ((c & core.PSM_EN_MASK) | s)
+            writereg(core.PSM_EN_MASK, s)
         other:
-            return ((curr_state & 1) == 1)
+            return ((c & 1) == 1)
 
 
-PUB power_save_mode(mode): curr_mode
+PUB power_save_mode(m): c
 ' Set power saving mode
 '   Valid values: 1..4
 '   Any other value polls the chip and returns the current setting
@@ -247,70 +247,46 @@ PUB power_save_mode(mode): curr_mode
 '   2           800                     1800                20              0.0036
 '   3           800                     2800                13              0.0036
 '   4           800                     4800                8               0.0036
-    curr_mode := readreg(core.PWR_SAVING)
-    case mode
+    c := readreg(core.PWR_SAVING)
+    case m
         1..4:
-            mode := ((curr_mode & core.PSM_MASK) | (mode-1))
-            writereg(core.PWR_SAVING, mode)
+            m := ((c & core.PSM_MASK) | (m-1))
+            writereg(core.PWR_SAVING, m)
         other:
-            return ((curr_mode >> core.PSM) & core.PSM_BITS)
+            return ((c >> core.PSM) & core.PSM_BITS)
 
 
-PUB powered(state): curr_state
+PUB powered(s): c
 ' Enable sensor power
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
-    curr_state := readreg(core.ALS_CONF_0)
-    case abs(state)
+    c := readreg(core.ALS_CONF_0)
+    case abs(s)
         0, 1:
             { ALS_SD is worded as a 'shut down' field, so 0 = power on, 1 = power off;
                 flip the bit here before writing it back to the sensor }
-            state := ((curr_state & core.ALS_SD_MASK) | ( (state ^ 1) & 1))
-            writereg(core.ALS_CONF_0, state)
+            s := ((c & core.ALS_SD_MASK) | ( (s ^ 1) & 1))
+            writereg(core.ALS_CONF_0, s)
         other:
-            return ((curr_state & 1) == 1)
+            return ((c & 1) == 1)
 
 
 PUB update_lux_res()
 ' Update lux resolution (lux per ADC LSB)
     case _als_gain
         2_000:
-            case _als_itime
-                800: _lux_res := 0_0036
-                400: _lux_res := 0_0072
-                200: _lux_res := 0_0144
-                100: _lux_res := 0_0288
-                50: _lux_res := 0_0576
-                25: _lux_res := 0_1152
+            _lux_res := 2_8800 / _als_itime
         1_000:
-            case _als_itime
-                800: _lux_res := 0_0072
-                400: _lux_res := 0_0144
-                200: _lux_res := 0_0288
-                100: _lux_res := 0_0576
-                50: _lux_res := 0_1152
-                25: _lux_res := 0_2304
+            _lux_res := 5_7600 / _als_itime
         0_250:
-            case _als_itime
-                800: _lux_res := 0_0288
-                400: _lux_res := 0_0576
-                200: _lux_res := 0_1152
-                100: _lux_res := 0_2304
-                50: _lux_res := 0_4608
-                25: _lux_res := 0_9216
+            _lux_res := 23_0400 / _als_itime
         0_125:
-            case _als_itime
-                800: _lux_res := 0_0576
-                400: _lux_res := 0_1152
-                200: _lux_res := 0_2304
-                100: _lux_res := 0_4608
-                50: _lux_res := 0_9216
-                25: _lux_res := 1_8432
+            _lux_res := 46_0800 / _als_itime
 
     _lux_max := (_lux_res * ADC_MAX)
 
 
-PUB white_data(): white_adc
+PUB white_data(): d
 ' Read ambient light sensor data - wide spectral response
 '   Returns: ADC counts
     return readreg(core.WHITE)
