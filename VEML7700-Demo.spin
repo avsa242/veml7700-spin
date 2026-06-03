@@ -4,8 +4,8 @@
     Description:    Demo of the VEML7700 driver
     Author:         Jesse Burt
     Started:        Jan 25, 2023
-    Updated:        Jun 7, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Jun 3, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -16,16 +16,15 @@
 
 CON
 
-    _clkmode    = cfg._clkmode
-    _xinfreq    = cfg._xinfreq
+    _clkmode    = xtal1+pll16x
+    _xinfreq    = 5_000_000
 
 
 OBJ
 
-    cfg:    "boardcfg.flip"
-    time:   "time"
     ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
     sensor: "sensor.light.veml7700" | SCL=28, SDA=29, I2C_FREQ=400_000
+    time:   "time"
 
 
 PUB main()
@@ -34,8 +33,8 @@ PUB main()
 
     repeat
         ser.pos_xy(0, 3)
-        ser.printf1(@"ALS: %4.4x\n\r", sensor.als_data())
-        ser.printf1(@"White: %4.4x", sensor.white_data())
+        ser.printf(@"ALS: %4.4x\n\r", sensor.als_data() )
+        ser.printf(@"White: %4.4x", sensor.white_data() )
 
 
 PUB setup()
@@ -56,7 +55,7 @@ PUB setup()
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

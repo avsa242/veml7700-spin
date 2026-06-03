@@ -4,8 +4,8 @@
     Description:    Driver for the VEML7700 ALS/Lux sensor
     Author:         Jesse Burt
     Started:        Jan 25, 2023
-    Updated:        Aug 25, 2025
-    Copyright (c) 2025 - See end of file for terms of use.
+    Updated:        Jun 3, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -17,14 +17,8 @@ CON
     I2C_FREQ        = 100_000
 
 
-
     SLAVE_WR        = core.SLAVE_ADDR
     SLAVE_RD        = core.SLAVE_ADDR|1
-
-    DEF_SCL         = 28
-    DEF_SDA         = 29
-    DEF_HZ          = 100_000
-    I2C_MAX_FREQ    = core.I2C_MAX_FREQ
 
     ADC_MAX         = core.ADC_MAX
 
@@ -43,7 +37,7 @@ OBJ
 #else
     i2c:    "com.i2c"                           ' PASM I2C engine
 #endif
-    core:   "core.con.veml7700.spin"            ' hw-specific low-level const's
+    core:   "core.con.veml7700.spin"            ' hw-specific constants
     time:   "time"                              ' basic timing functions
 
 
@@ -168,7 +162,7 @@ PUB int_ena(s): c
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
     c := readreg(core.ALS_CONF_0)
-    case ||(s)
+    case abs(s)
         0, 1:
             s := ( (c & core.ALS_SD_MASK) | ((s & 1) << core.ALS_INT_EN) )
             writereg(core.ALS_CONF_0, s)
@@ -223,7 +217,7 @@ PUB power_save_ena(s): c
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
     c := readreg(core.PWR_SAVING)
-    case ||(s)
+    case abs(s)
         0, 1:
             s := ((c & core.PSM_EN_MASK) | s)
             writereg(core.PSM_EN_MASK, s)
@@ -267,7 +261,7 @@ PUB powered(s): c
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value polls the chip and returns the current setting
     c := readreg(core.ALS_CONF_0)
-    case ||(s)
+    case abs(s)
         0, 1:
             { ALS_SD is worded as a 'shut down' field, so 0 = power on, 1 = power off;
                 flip the bit here before writing it back to the sensor }
@@ -331,7 +325,7 @@ PRI writereg(reg_nr, val) | cmd_pkt
 
 DAT
 {
-Copyright 2025 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
